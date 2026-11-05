@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Palco Timer</string>
+    <string name="channel_name">Server del timer</string>
+    <string name="notif_title">Palco Timer attivo</string>
+    <string name="notif_stop">Ferma</string>
+</resources>

@@ -140,6 +140,12 @@ test('lo stato sopravvive al riavvio del server', async () => {
 });
 
 // ---------------- modalità ponte (usata dall'app Android) ----------------
+// Gli stessi test girano anche contro il server Java dell'app: RELAY_EXTERNAL_PORT=3102 npm test
+
+const startRelay = () => (process.env.RELAY_EXTERNAL_PORT
+  ? Promise.resolve({ port: Number(process.env.RELAY_EXTERNAL_PORT), close: async () => {} })
+  : createTimerServer({ port: 0, host: '127.0.0.1', relay: true }));
+
 
 function raw(port, room, role) {
   const ws = new WebSocket(`ws://127.0.0.1:${port}/ws?room=${room}&role=${role}`);
@@ -150,7 +156,7 @@ function raw(port, room, role) {
 }
 
 test('ponte: lo stato dell\'host arriva a chi si collega, anche dopo', async () => {
-  const srv = await createTimerServer({ port: 0, host: '127.0.0.1', relay: true });
+  const srv = await startRelay();
   try {
     const ping = await (await fetch(`http://127.0.0.1:${srv.port}/api/ping`)).json();
     assert.equal(ping.mode, 'relay');
@@ -166,7 +172,7 @@ test('ponte: lo stato dell\'host arriva a chi si collega, anche dopo', async () 
 });
 
 test('ponte: le azioni arrivano all\'host con il ruolo messo dal ponte, anche se il client ne dichiara un altro', async () => {
-  const srv = await createTimerServer({ port: 0, host: '127.0.0.1', relay: true });
+  const srv = await startRelay();
   try {
     const host = raw(srv.port, 'PONTE2', 'host'); await host.opened;
     const mod = raw(srv.port, 'PONTE2', 'moderator'); await mod.opened;
@@ -180,7 +186,7 @@ test('ponte: le azioni arrivano all\'host con il ruolo messo dal ponte, anche se
 });
 
 test('ponte: i client non ricevono messaggi di altri client, e il server normale rifiuta "host"', async () => {
-  const relay = await createTimerServer({ port: 0, host: '127.0.0.1', relay: true });
+  const relay = await startRelay();
   const normal = await createTimerServer({ port: 0, host: '127.0.0.1' });
   try {
     const host = raw(relay.port, 'PONTE3', 'host'); await host.opened;

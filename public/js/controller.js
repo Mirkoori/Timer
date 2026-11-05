@@ -343,6 +343,11 @@ importGo.addEventListener('click', () => {
 dom.btnExport.addEventListener('click', () => {
   const blob = new Blob(['﻿', rundownToCsv(state.rundown)], { type: 'text/csv;charset=utf-8' });
   const slug = state.name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'evento';
+  // Nell'app Android i download da blob non funzionano: il salvataggio lo fa l'app (cartella Download).
+  if (window.PalcoApp && typeof window.PalcoApp.saveText === 'function') {
+    window.PalcoApp.saveText(`${slug}-scaletta.csv`, '\ufeff' + rundownToCsv(state.rundown));
+    return;
+  }
   const a = el('a', { href: URL.createObjectURL(blob), download: `${slug}-scaletta.csv` });
   document.body.append(a);
   a.click();

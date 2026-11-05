@@ -1,0 +1,61 @@
+name: App Android
+
+# Si avvia a mano (Actions → "App Android" → Run workflow). Crea l'APK e lo pubblica nella Release "android-test",
+# con un indirizzo di download fisso, scaricabile direttamente dal telefono.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.9
+
+      - run: npm ci
+      - run: npm test
+
+      - name: Prova il server Java dell'app con gli stessi test del ponte
+        run: |
+          mkdir -p /tmp/relay-out
+          javac -d /tmp/relay-out android/app/src/main/java/it/mirkoori/palcotimer/RelayServer.java android/tools/DevMain.java
+          java -cp /tmp/relay-out DevMain public 3102 &
+          sleep 3
+          RELAY_EXTERNAL_PORT=3102 node --test test/server.test.js
+
+      - name: Costruisci l'APK
+        run: gradle -p android assembleDebug --stacktrace
+
+      - name: Rinomina
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk palco-timer.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: palco-timer-android
+          path: palco-timer.apk
+          if-no-files-found: error
+
+      - name: Pubblica per il download diretto
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-test
+          name: Android (versione di prova)
+          prerelease: true
+          body: |
+            Versione di prova dell'app Android. Scarica `palco-timer.apk` dal telefono e installala
+            (Android chiede di consentire l'installazione da questo browser).
+          files: palco-timer.apk

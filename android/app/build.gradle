@@ -1,0 +1,45 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'it.mirkoori.palcotimer'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'it.mirkoori.palcotimer'
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName '0.1.0'
+    }
+
+    // Chiave di prova, nel repository: serve solo a far installare gli aggiornamenti sopra la versione precedente
+    // durante i test. Per il Play Store si userà una chiave privata vera (non in questo repository).
+    signingConfigs {
+        debug {
+            storeFile file('../debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    // Le pagine dell'app sono la cartella public/ della radice: stessi file del sito e dell'app per computer.
+    sourceSets {
+        main {
+            assets.srcDirs = ['src/main/assets', '../../public']
+        }
+    }
+}
