@@ -114,8 +114,8 @@ async function connectLocal({ room, role, onState, onStatus }) {
       if (next !== state) commit(next);
     }, 250);
     link.state = state;
-    onStatus('online');
-    onState(state);
+    // Lo stato iniziale arriva dopo che la pagina ha finito di prepararsi (con il server arriva comunque in ritardo).
+    setTimeout(() => { onStatus('online'); onState(state); }, 0);
     return link;
   }
 
