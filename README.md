@@ -26,6 +26,16 @@ Porta diversa: `PORT=3100 npm start`.
 Provarla dal codice: `npm install && npm run desktop`.
 Creare gli installer: su GitHub, scheda **Actions → App per computer → Run workflow** (oppure creando un tag `v0.2.0`, che li allega anche alla Release). Scarichi i file `.exe`, `.dmg` e `.AppImage` da quella pagina.
 
+## App Android
+
+Il telefono o il tablet fa da controller principale e da host: l'app contiene un piccolo server (Java, `android/`) che serve le pagine e fa da ponte. Lo stato e il timer li tiene il controller dentro l'app; schermo relatore e moderatore si aprono nel browser, sullo stesso telefono oppure su altri dispositivi collegati alla stessa Wi-Fi o all'hotspot del telefono, con il QR.
+
+- Una notifica fissa tiene attivo il server anche a schermo spento; da lì si ferma ("Ferma").
+- Lo schermo resta acceso mentre il controller è aperto.
+- "Esporta" salva il CSV nella cartella Download.
+- Versione di prova: scarica `palco-timer.apk` da https://github.com/Mirkoori/Timer/releases/tag/android-test (si crea da **Actions → App Android → Run workflow**).
+- L'APK è firmato con una chiave di prova inclusa nel repository: va bene per i test; per il Play Store servirà una chiave privata vera.
+
 ## Pagine e ruoli
 
 | Pagina | Ruolo | Cosa può fare |
@@ -75,7 +85,7 @@ npm test
 
 ## Prossimi passi
 
-1. Pacchetto Android: server incorporato nell'app, che fa da host; gli altri dispositivi si collegano da browser. (Quello per computer c'è già.)
+1. Provare l'app Android su telefoni diversi e rifinirla (le versioni per computer e Android ci sono già).
 2. Schermo sempre acceso in modo nativo.
 3. PIN o token per i ruoli.
 4. Indicatore di anticipo/ritardo.
