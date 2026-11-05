@@ -6,7 +6,7 @@
 Palco Timer
 
 ## Descrizione breve (massimo 80 caratteri)
-Il timer per chi parla sul palco: scaletta, schermo relatore e messaggi, senza internet
+Timer da palco: scaletta, schermo relatore e messaggi, senza internet
 
 ## Descrizione completa (massimo 4000 caratteri)
 Palco Timer è il timer pensato per chi organizza e gestisce eventi, convegni e interventi dal vivo: tecnici, agenzie, moderatori e relatori.
