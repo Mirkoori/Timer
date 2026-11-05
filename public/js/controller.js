@@ -1,9 +1,10 @@
 import {
   computeDisplay, formatClock, formatDuration, parseDuration, plannedOffsets, totalSeconds, addToClock,
-  parseRundownText, rundownToCsv, newId,
+  parseRundownText, parseProgramLines, rundownToCsv, newId,
 } from './core.js';
 import { connect } from './sync.js';
 import { mountMessages } from './messages.js';
+import { pdfLines } from './pdf.js';
 import {
   $, el, icon, roomFromUrl, pageUrl, rememberRoom, showConn, renderDigits, makeRail, applyRail,
   stateLabel, toast, copyText, every100ms,
@@ -288,6 +289,7 @@ const dlgImport = $('#dlgImport');
 const importText = $('#importText');
 const importGo = $('#importGo');
 let parsed = { segments: [], skipped: [] };
+let importStart = ''; // orario di inizio letto da un PDF
 function parseImport() {
   parsed = parseRundownText(importText.value);
   const n = parsed.segments.length;
@@ -298,19 +300,36 @@ function parseImport() {
   importGo.disabled = n === 0;
   importGo.textContent = n ? `Sostituisci la scaletta con ${n} ${n === 1 ? 'intervento' : 'interventi'}` : 'Sostituisci la scaletta';
 }
-dom.btnImport.addEventListener('click', () => { importText.value = ''; parseImport(); dlgImport.showModal(); importText.focus(); });
+dom.btnImport.addEventListener('click', () => { importText.value = ''; importStart = ''; parseImport(); dlgImport.showModal(); importText.focus(); });
 importText.addEventListener('input', parseImport);
 $('#importFile').addEventListener('change', async (e) => {
   const file = e.target.files[0];
   e.target.value = '';
   if (!file) return;
-  if (file.size > 1024 * 1024) { toast('File troppo grande (massimo 1 MB)'); return; }
-  importText.value = await file.text();
-  parseImport();
+  const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+  if (file.size > (isPdf ? 15 : 1) * 1024 * 1024) { toast(`File troppo grande (massimo ${isPdf ? 15 : 1} MB)`); return; }
+  if (!isPdf) { importStart = ''; importText.value = await file.text(); parseImport(); return; }
+  const note = $('#importSummary');
+  note.textContent = 'Leggo il PDF…';
+  try {
+    const prog = parseProgramLines(await pdfLines(file));
+    if (!prog.segments.length) {
+      importStart = ''; importText.value = ''; parseImport();
+      note.textContent = 'Nel PDF non trovo un programma con gli orari. Se è una scansione o una foto non ha testo da leggere: incolla le righe a mano.';
+      return;
+    }
+    importStart = prog.startTime;
+    importText.value = rundownToCsv(prog.segments.map((x) => ({ ...x }))).replace(/^[^\n]*\n/, '');
+    parseImport();
+    note.textContent += ` Inizio alle ${prog.startTime}, ricavato dal PDF.${prog.guessed ? ` Per ${prog.guessed === 1 ? 'un intervento' : `${prog.guessed} interventi`} manca l'orario di fine: ho messo 10 minuti, controlla.` : ''} Puoi correggere le righe qui sopra prima di confermare.`;
+  } catch {
+    note.textContent = 'Non riesco a leggere questo PDF. Prova a incollare le righe a mano.';
+  }
 });
 importGo.addEventListener('click', () => {
   if (!parsed.segments.length) return;
   send({ type: 'rundown_replace', segments: parsed.segments });
+  if (importStart) send({ type: 'meta', startTime: importStart });
   editing = null;
   dlgImport.close();
   toast(`Scaletta importata: ${parsed.segments.length} ${parsed.segments.length === 1 ? 'intervento' : 'interventi'}`);

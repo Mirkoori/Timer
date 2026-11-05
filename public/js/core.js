@@ -393,3 +393,60 @@ export function rundownToCsv(rundown) {
   for (const s of rundown) lines.push([q(s.title), q(s.speaker), formatDuration(s.duration), q(s.notes)].join(';'));
   return lines.join('\r\n') + '\r\n';
 }
+
+/**
+ * Legge un programma stampato (righe di testo, per esempio da un PDF):
+ *   "10:05  Il sonno come specchio del mondo"
+ *   "       Liborio Parrino"
+ * Ogni riga che inizia con un orario apre un intervento; le righe sotto sono i relatori.
+ * Se c'è solo l'orario di inizio, la durata è la distanza dal successivo.
+ * Una chiusura finale ("Chiusura dei lavori") serve solo a dare la fine all'ultimo intervento.
+ */
+const PROGRAM_TIME = /^([01]?\d|2[0-3])[:.]([0-5]\d)(?:\s*[-–—]\s*([01]?\d|2[0-3])[:.]([0-5]\d))?(?:\s+|$)(.*)$/;
+const PROGRAM_END = /^(chiusura|fine|termine|conclusione)\b.*\b(lavori|evento|giornata|convegno)\b|^(chiusura|fine)\b/i;
+const PROGRAM_STOP = /^(informazioni|sede|segreteriaorganizzativa|segreteria|iscrizione|note)\b/i;
+
+export function parseProgramLines(lines, { defaultSeconds = 600 } = {}) {
+  const items = [];
+  for (const raw of lines) {
+    let line = String(raw).replace(/[  ]/g, ' ').replace(/\s+/g, ' ').trim();
+    if (/^(?:\S ){3,}\S$/.test(line)) line = line.replace(/ /g, ''); // titoli con le lettere spaziate: "I N F O"
+    if (!line || /^programma$/i.test(line)) continue;
+    const m = PROGRAM_TIME.exec(line);
+    if (m) {
+      items.push({
+        start: Number(m[1]) * 60 + Number(m[2]),
+        end: m[3] !== undefined ? Number(m[3]) * 60 + Number(m[4]) : null,
+        title: m[5].trim(),
+        extra: [],
+      });
+    } else if (items.length) {
+      if (PROGRAM_STOP.test(line)) break;
+      const last = items[items.length - 1];
+      if (last.title && PROGRAM_END.test(last.title)) continue; // dopo la chiusura c'è solo contorno
+      if (!last.title) last.title = line;
+      else last.extra.push(line);
+    }
+  }
+  if (!items.length) return { segments: [], startTime: '', guessed: 0 };
+
+  // l'ultima riga di chiusura non è un intervento: dà solo la fine al precedente
+  let closeAt = null;
+  const tail = items[items.length - 1];
+  if (items.length > 1 && !tail.extra.length && !tail.end && PROGRAM_END.test(tail.title)) {
+    closeAt = tail.start;
+    items.pop();
+  }
+
+  let guessed = 0;
+  const segments = items.map((it, i) => {
+    const next = i + 1 < items.length ? items[i + 1].start : closeAt;
+    let minutes = it.end !== null ? it.end - it.start : next !== null ? next - it.start : null;
+    let duration;
+    if (minutes === null || minutes <= 0) { duration = defaultSeconds; guessed++; } else duration = minutes * 60;
+    return { title: it.title || 'Intervento', speaker: it.extra.join(', '), duration, notes: '' };
+  });
+  const s = items[0].start;
+  const startTime = `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+  return { segments, startTime, guessed };
+}

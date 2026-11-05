@@ -118,9 +118,9 @@
   <dialog id="dlgImport" aria-labelledby="dlgImportTitle">
     <div class="dlg-head"><h2 id="dlgImportTitle">Importa la scaletta</h2><button class="btn btn-icon btn-quiet" data-close type="button" aria-label="Chiudi"></button></div>
     <div class="dlg-body">
-      <p class="note">Incolla le righe da Excel o Fogli Google, oppure scegli un file CSV. Colonne: titolo, relatore, durata, note. La durata può essere 5 (minuti), 5:30 oppure 1:05:00. Con due colonne servono titolo e durata.</p>
+      <p class="note">Scegli il programma in PDF, un file CSV, oppure incolla le righe da Excel o Fogli Google. Colonne: titolo, relatore, durata, note. La durata può essere 5 (minuti), 5:30 oppure 1:05:00. Con due colonne servono titolo e durata.</p>
       <div class="field"><label for="importText">Righe da importare</label><textarea class="input" id="importText" rows="7" spellcheck="false" placeholder="Apertura	Anna	5:00&#10;Keynote	Bruno	20&#10;Pausa caffè	-	15"></textarea></div>
-      <div><label class="btn btn-small" for="importFile" id="importFileLabel"></label><input class="sr-only" type="file" id="importFile" accept=".csv,.tsv,.txt,text/csv,text/plain"></div>
+      <div><label class="btn btn-small" for="importFile" id="importFileLabel"></label><input class="sr-only" type="file" id="importFile" accept=".csv,.tsv,.txt,.pdf,text/csv,text/plain,application/pdf"></div>
       <p class="note" id="importSummary" aria-live="polite"></p>
     </div>
     <div class="dlg-foot"><button class="btn btn-quiet" data-close type="button">Annulla</button><button class="btn btn-go" id="importGo" type="button" disabled>Sostituisci la scaletta</button></div>

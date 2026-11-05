@@ -199,3 +199,35 @@ test('orari previsti', () => {
   assert.equal(addToClock('09:30', 1500), '09:55');
   assert.equal(addToClock('23:50', 1200), '00:10');
 });
+
+test('programma: durate dall\'orario successivo, relatori sulla riga sotto, chiusura finale esclusa', async () => {
+  const { parseProgramLines } = await import('../public/js/core.js');
+  const r = parseProgramLines([
+    'Bologna, Sabato 31 ottobre 2026', '', 'PROGRAMMA',
+    '10:00  Saluto di apertura', '       Anna Rossi, Luca Bianchi',
+    '10:05  Il sonno come specchio', '       Mario Verdi',
+    '10:45  Pausa',
+    '11:00  Chiusura dei lavori',
+    'INFORMAZIONI', '12:30 Segreteria',
+  ]);
+  assert.equal(r.startTime, '10:00');
+  assert.deepEqual(r.segments.map((s) => s.duration), [300, 2400, 900]);
+  assert.equal(r.segments[0].speaker, 'Anna Rossi, Luca Bianchi');
+  assert.equal(r.segments[2].title, 'Pausa');
+  assert.equal(r.guessed, 0);
+});
+
+test('programma: intervalli "9.30 - 10.15", ultimo senza fine = 10 minuti stimati, testo senza orari = vuoto', async () => {
+  const { parseProgramLines } = await import('../public/js/core.js');
+  const a = parseProgramLines(['9.30 - 10.15 Apertura', '10:15 Keynote']);
+  assert.deepEqual(a.segments.map((s) => s.duration), [2700, 600]);
+  assert.equal(a.guessed, 1);
+  assert.equal(a.startTime, '09:30');
+  assert.deepEqual(parseProgramLines(['Solo una locandina', '31.10.2026']).segments, []);
+});
+
+test('programma: titolo "I N F O R M A Z I O N I" e contorno dopo la chiusura non diventano interventi', async () => {
+  const { parseProgramLines } = await import('../public/js/core.js');
+  const r = parseProgramLines(['10:00 Apertura', 'Anna', '10:30 Chiusura dei lavori', 'Sala Rossa', '', 'I N F O R M A Z I O N I', 'Tel. 051 263703']);
+  assert.deepEqual(r.segments.map((s) => [s.title, s.duration]), [['Apertura', 1800]]);
+});
