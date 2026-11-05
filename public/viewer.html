@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#15171a">
+  <title>Schermo relatore · Palco Timer</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/viewer.css">
+</head>
+<body class="viewer" data-level="idle" data-status="idle">
+  <main class="screen">
+    <header class="top">
+      <div class="who">
+        <h1 id="title">In attesa</h1>
+        <p id="speaker"></p>
+      </div>
+      <time id="clock"></time>
+    </header>
+
+    <section class="center" role="timer" aria-label="Tempo rimanente">
+      <div class="stack">
+        <div class="digits" id="digits"></div>
+        <div id="railSlot"></div>
+      </div>
+    </section>
+
+    <footer class="bottom">
+      <p id="next"></p>
+      <p id="state"></p>
+    </footer>
+
+    <aside class="msg" id="msg" role="status" aria-live="assertive" hidden>
+      <p id="msgText"></p>
+    </aside>
+  </main>
+
+  <div class="badge conn" id="conn" data-status="connecting">Connessione in corso</div>
+  <div class="chrome" id="chrome">
+    <button class="btn btn-small" id="fs" type="button">Schermo intero</button>
+  </div>
+
+  <script type="module" src="js/viewer.js"></script>
+</body>
+</html>

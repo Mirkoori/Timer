@@ -1,0 +1,90 @@
+/* viewer.css — il monitor del relatore: va letto a colpo d'occhio da 10 metri, al buio. */
+
+html, body { height: 100%; }
+body.viewer { overflow: hidden; background: var(--stage); user-select: none; -webkit-user-select: none; }
+
+.screen {
+  position: relative;
+  height: 100vh; height: 100dvh;
+  display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto;
+  gap: clamp(8px, 2vmin, 24px);
+  padding: max(clamp(16px, 3.5vmin, 48px), env(safe-area-inset-top)) max(clamp(16px, 3.5vmin, 48px), env(safe-area-inset-right)) max(clamp(16px, 3.5vmin, 48px), env(safe-area-inset-bottom)) max(clamp(16px, 3.5vmin, 48px), env(safe-area-inset-left));
+}
+
+/* intestazione: chi sta parlando e che ore sono */
+.top { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
+.who { min-width: 0; }
+#title {
+  font-family: var(--font-num); font-weight: 600; line-height: 1;
+  font-size: clamp(28px, 6.4vmin, 92px);
+  overflow-wrap: anywhere;
+}
+#speaker { margin-top: .35em; color: var(--muted); font-size: clamp(18px, 3.2vmin, 44px); }
+#speaker:empty { display: none; }
+#clock { flex: none; font-family: var(--font-num); font-weight: 600; font-size: clamp(24px, 5vmin, 68px); line-height: 1; color: var(--muted); }
+#clock:empty { display: none; }
+
+/* centro: le cifre riempiono tutto lo spazio disponibile, anche quando compare un messaggio */
+.center { container-type: size; display: grid; place-items: center; min-height: 0; }
+.stack { width: 100%; display: grid; justify-items: center; gap: clamp(14px, 4cqh, 56px); }
+.center .digits {
+  font-size: min(calc(92cqw / var(--w, 2.2)), 66cqh);
+  color: var(--paper);
+  transition: color .2s, opacity .2s;
+}
+#railSlot { width: 100%; }
+#railSlot .rail { height: clamp(14px, 2.6vmin, 30px); }
+#railSlot .rail-thumb { width: clamp(6px, .9vmin, 12px); top: -.9vmin; bottom: -.9vmin; box-shadow: 0 0 0 clamp(3px, .5vmin, 6px) var(--stage); }
+
+/* piede: prossimo intervento e stato */
+.bottom { display: flex; justify-content: space-between; align-items: baseline; gap: 24px; color: var(--muted); font-size: clamp(18px, 3.2vmin, 44px); }
+#next:empty { visibility: hidden; }
+#state { text-align: right; flex: none; font-family: var(--font-num); font-weight: 600; }
+
+/* livelli: i colori dicono lo stato prima ancora di leggere i numeri */
+body[data-level='ok'] .digits { color: var(--paper); }
+body[data-level='warn'] .digits { color: var(--warn); }
+body[data-level='crit'] .digits,
+body[data-level='over'] .digits { color: var(--crit); }
+body[data-level='idle'] .digits { color: var(--muted); }
+body[data-status='paused'] .digits { opacity: .55; }
+body[data-level='over'] #state, body[data-level='crit'] #state { color: var(--crit); }
+body[data-level='warn'] #state { color: var(--warn); }
+body[data-status='running'][data-level='ok'] #state { color: var(--go); }
+
+/* overtime: tutto lo schermo pulsa, impossibile non accorgersene */
+body[data-level='over'] { animation: overtime 1.2s ease-in-out infinite; }
+body[data-level='over'][data-status='paused'] { animation: none; background: #2e0d0a; }
+@keyframes overtime { 0%, 100% { background: var(--stage); } 50% { background: #3d0f0b; } }
+
+/* messaggio al palco: occupa la parte bassa e spinge le cifre in alto */
+.msg {
+  display: grid; place-items: center; text-align: center;
+  min-height: 30vh; min-height: 30dvh;
+  margin: 0 calc(-1 * clamp(16px, 3.5vmin, 48px)) calc(-1 * clamp(16px, 3.5vmin, 48px));
+  padding: clamp(16px, 4vmin, 56px);
+  background: var(--paper); color: var(--on-color);
+}
+.msg p { font-family: var(--font-num); font-weight: 700; line-height: 1.02; font-size: clamp(40px, 10vmin, 150px); overflow-wrap: anywhere; max-width: 22ch; }
+.msg[data-color='warn'] { background: var(--warn); }
+.msg[data-color='alert'] { background: var(--crit); color: #fff; }
+.msg.in { animation: msg-in .22s ease-out; }
+.msg[data-color='alert'] p { animation: msg-flash 1s steps(1) infinite; }
+@keyframes msg-in { from { transform: translateY(40px); opacity: 0; } }
+@keyframes msg-flash { 50% { opacity: .35; } }
+
+/* comandi di servizio: compaiono al tocco e spariscono da soli */
+.chrome { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); transition: opacity .3s; }
+body.idle-ui { cursor: none; }
+body.idle-ui .chrome { opacity: 0; pointer-events: none; }
+.badge {
+  position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 5;
+  padding: 6px 14px; border-radius: 999px; background: var(--raised); color: var(--paper); font-size: 16px;
+}
+.badge[data-status='online'] { display: none; }
+
+@media (max-aspect-ratio: 1/1) {
+  /* telefono in verticale: titolo sopra, orologio sotto il titolo */
+  .top { flex-direction: column; gap: 6px; }
+  #clock { order: -1; }
+}

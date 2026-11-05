@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#15171a">
+  <title>Controller · Palco Timer</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/messages.css">
+  <link rel="stylesheet" href="css/controller.css">
+</head>
+<body class="controller">
+  <header class="bar">
+    <a class="brand" href="index.html">Palco Timer</a>
+    <div class="field name-field">
+      <label class="sr-only" for="name">Nome dell'evento</label>
+      <input class="input name" id="name" maxlength="80" autocomplete="off">
+    </div>
+    <button class="btn btn-small code" id="code" type="button"></button>
+    <span class="conn" id="conn" data-status="connecting">Connessione in corso</span>
+    <span class="spacer"></span>
+    <button class="btn btn-small" id="btnLinks" type="button"></button>
+    <button class="btn btn-small btn-quiet" id="btnSettings" type="button"></button>
+  </header>
+
+  <main class="layout">
+    <div class="col-main">
+      <section class="panel onair" id="onair" data-level="idle" aria-label="In onda">
+        <div class="now-head">
+          <h2 id="nowTitle">In attesa</h2>
+          <p id="nowSpeaker"></p>
+        </div>
+        <div class="now-clock" role="timer" aria-label="Tempo rimanente">
+          <div class="digits" id="digits"></div>
+        </div>
+        <div id="railSlot"></div>
+        <p class="now-state" id="nowState"></p>
+
+        <div class="transport">
+          <button class="btn btn-big" id="tPrev" type="button"></button>
+          <button class="btn btn-big btn-go" id="tToggle" type="button"></button>
+          <button class="btn btn-big" id="tNext" type="button"></button>
+        </div>
+        <div class="adjust">
+          <button class="btn" id="tMinus" type="button"></button>
+          <button class="btn" id="tPlus" type="button"></button>
+          <button class="btn btn-quiet" id="tReset" type="button"></button>
+        </div>
+        <p class="hint">Da tastiera: barra spaziatrice avvia e ferma, frecce destra e sinistra cambiano intervento, più e meno aggiungono o tolgono un minuto.</p>
+      </section>
+
+      <section class="panel" aria-labelledby="msgTitle">
+        <h2 class="panel-title" id="msgTitle">Messaggi al palco</h2>
+        <div class="msgpanel" id="messages"></div>
+      </section>
+    </div>
+
+    <section class="panel rundown" aria-labelledby="rundownTitle">
+      <div class="rundown-head">
+        <div>
+          <h2 class="panel-title" id="rundownTitle">Scaletta</h2>
+          <p class="summary" id="summary"></p>
+        </div>
+        <div class="rundown-tools">
+          <button class="btn btn-small" id="btnImport" type="button"></button>
+          <button class="btn btn-small" id="btnExport" type="button"></button>
+        </div>
+      </div>
+      <ol class="strips" id="strips"></ol>
+      <button class="btn btn-add" id="btnAdd" type="button"></button>
+    </section>
+  </main>
+
+  <!-- collegamento degli schermi -->
+  <dialog id="dlgLinks" aria-labelledby="dlgLinksTitle">
+    <div class="dlg-head"><h2 id="dlgLinksTitle">Collega gli schermi</h2><button class="btn btn-icon btn-quiet" data-close type="button" aria-label="Chiudi"></button></div>
+    <div class="dlg-body">
+      <p class="note" id="linksNote"></p>
+      <div class="link-card">
+        <div class="link-text">
+          <h3>Schermo relatore</h3>
+          <p>Da mettere sul monitor o sul tablet davanti a chi parla.</p>
+          <div class="link-copy"><input class="input" id="urlViewer" readonly aria-label="Indirizzo dello schermo relatore"><button class="btn btn-small" id="copyViewer" type="button"></button></div>
+        </div>
+        <div class="qr" id="qrViewer" role="img" aria-label="Codice QR dello schermo relatore"></div>
+      </div>
+      <div class="link-card">
+        <div class="link-text">
+          <h3>Moderatore</h3>
+          <p>Per chi manda messaggi ai relatori senza toccare il timer.</p>
+          <div class="link-copy"><input class="input" id="urlModerator" readonly aria-label="Indirizzo della pagina moderatore"><button class="btn btn-small" id="copyModerator" type="button"></button></div>
+        </div>
+        <div class="qr" id="qrModerator" role="img" aria-label="Codice QR della pagina moderatore"></div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- impostazioni -->
+  <dialog id="dlgSettings" aria-labelledby="dlgSettingsTitle">
+    <div class="dlg-head"><h2 id="dlgSettingsTitle">Impostazioni</h2><button class="btn btn-icon btn-quiet" data-close type="button" aria-label="Chiudi"></button></div>
+    <div class="dlg-body">
+      <div class="field"><label for="setStart">Ora di inizio dell'evento</label><input class="input" id="setStart" type="time"></div>
+      <div class="two">
+        <div class="field"><label for="setWarn">Avviso a (secondi)</label><input class="input" id="setWarn" type="number" min="0" max="3600" inputmode="numeric"></div>
+        <div class="field"><label for="setCrit">Allarme a (secondi)</label><input class="input" id="setCrit" type="number" min="0" max="3600" inputmode="numeric"></div>
+      </div>
+      <p class="note">Le soglie si adattano agli interventi brevi: l'avviso non supera metà del tempo, l'allarme un quarto.</p>
+      <label class="check"><input type="checkbox" id="setAuto"><span>Passa da solo all'intervento successivo quando il tempo finisce</span></label>
+      <label class="check"><input type="checkbox" id="setClock"><span>Mostra l'ora sullo schermo del relatore</span></label>
+      <label class="check"><input type="checkbox" id="setSpeaker"><span>Mostra il nome del relatore</span></label>
+      <label class="check"><input type="checkbox" id="setNext"><span>Mostra l'intervento successivo</span></label>
+    </div>
+    <div class="dlg-foot"><button class="btn" data-close type="button">Chiudi</button></div>
+  </dialog>
+
+  <!-- importazione -->
+  <dialog id="dlgImport" aria-labelledby="dlgImportTitle">
+    <div class="dlg-head"><h2 id="dlgImportTitle">Importa la scaletta</h2><button class="btn btn-icon btn-quiet" data-close type="button" aria-label="Chiudi"></button></div>
+    <div class="dlg-body">
+      <p class="note">Incolla le righe da Excel o Fogli Google, oppure scegli un file CSV. Colonne: titolo, relatore, durata, note. La durata può essere 5 (minuti), 5:30 oppure 1:05:00. Con due colonne servono titolo e durata.</p>
+      <div class="field"><label for="importText">Righe da importare</label><textarea class="input" id="importText" rows="7" spellcheck="false" placeholder="Apertura	Anna	5:00&#10;Keynote	Bruno	20&#10;Pausa caffè	-	15"></textarea></div>
+      <div><label class="btn btn-small" for="importFile" id="importFileLabel"></label><input class="sr-only" type="file" id="importFile" accept=".csv,.tsv,.txt,text/csv,text/plain"></div>
+      <p class="note" id="importSummary" aria-live="polite"></p>
+    </div>
+    <div class="dlg-foot"><button class="btn btn-quiet" data-close type="button">Annulla</button><button class="btn btn-go" id="importGo" type="button" disabled>Sostituisci la scaletta</button></div>
+  </dialog>
+
+  <script src="vendor/qrcode.js"></script>
+  <script type="module" src="js/controller.js"></script>
+</body>
+</html>

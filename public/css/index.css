@@ -1,0 +1,24 @@
+/* index.css — pagina di ingresso */
+
+.wrap { max-width: 640px; margin: 0 auto; padding: clamp(24px, 8vh, 80px) max(20px, env(safe-area-inset-right)) 48px max(20px, env(safe-area-inset-left)); display: grid; gap: 28px; }
+h1 { font-family: var(--font-num); font-weight: 700; font-size: clamp(54px, 12vw, 88px); line-height: .95; }
+.lead { font-size: 20px; color: var(--muted); max-width: 52ch; margin-top: -8px; }
+
+.block { display: grid; gap: 12px; padding: 22px; border-radius: var(--r-l); background: var(--panel); justify-items: start; }
+.block h2 { font-family: var(--font-num); font-weight: 700; font-size: 30px; line-height: 1.1; }
+.block p { color: var(--muted); }
+.btn-big { min-height: 64px; padding: 0 28px; font-size: 20px; border-radius: var(--r-l); }
+
+.join { display: grid; gap: 14px; width: 100%; }
+.code-input { font-family: var(--font-num); font-weight: 700; font-size: 32px; letter-spacing: .1em; text-transform: uppercase; min-height: 60px; max-width: 320px; }
+.join-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+.error { color: var(--crit); min-height: 1.4em; }
+
+.recent { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; width: 100%; }
+.recent a { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 14px; border-radius: var(--r-m); background: var(--raised); color: var(--paper); text-decoration: none; min-height: 52px; }
+.recent a:hover { background: var(--raised-hi); }
+.recent .rname { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.recent .rcode { font-family: var(--font-num); font-weight: 700; font-size: 22px; letter-spacing: .08em; color: var(--muted); }
+
+.lan { color: var(--muted); font-size: 16px; }
+.lan strong { color: var(--paper); font-weight: 600; word-break: break-all; }

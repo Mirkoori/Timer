@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#15171a">
+  <title>Moderatore · Palco Timer</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/messages.css">
+  <link rel="stylesheet" href="css/moderator.css">
+</head>
+<body class="moderator">
+  <header class="bar">
+    <a class="brand" href="index.html">Palco Timer</a>
+    <h1 class="event" id="evName">Moderatore</h1>
+    <span class="conn" id="conn" data-status="connecting">Connessione in corso</span>
+  </header>
+
+  <main class="mod-layout">
+    <section class="panel glance" id="glance" data-level="idle" aria-label="Cosa vede il relatore">
+      <h2 id="gTitle">In attesa</h2>
+      <p class="who" id="gSpeaker"></p>
+      <div class="clock" role="timer" aria-label="Tempo rimanente"><div class="digits" id="gDigits"></div></div>
+      <div id="railSlot"></div>
+      <p class="state" id="gState"></p>
+    </section>
+
+    <section class="panel" aria-labelledby="msgTitle">
+      <h2 class="panel-title" id="msgTitle">Messaggi al palco</h2>
+      <div class="msgpanel" id="messages"></div>
+    </section>
+  </main>
+
+  <script type="module" src="js/moderator.js"></script>
+</body>
+</html>

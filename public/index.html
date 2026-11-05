@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d0e10">
+  <title>Palco Timer</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/index.css">
+</head>
+<body class="home">
+  <main class="wrap">
+    <h1>Palco Timer</h1>
+    <p class="lead">Una scaletta con i tempi di ogni intervento. Tu comandi da un dispositivo, i relatori vedono il tempo su uno schermo davanti a loro e ricevono i tuoi messaggi.</p>
+
+    <section class="block" aria-labelledby="newTitle">
+      <h2 id="newTitle">Nuovo evento</h2>
+      <p>Crea una stanza con una scaletta di esempio da modificare.</p>
+      <button class="btn btn-go btn-big" id="new" type="button">Crea un evento</button>
+    </section>
+
+    <section class="block" aria-labelledby="joinTitle">
+      <h2 id="joinTitle">Entra in un evento</h2>
+      <form id="join" class="join" novalidate>
+        <div class="field">
+          <label for="code">Codice dell'evento</label>
+          <input class="input code-input" id="code" name="code" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="K7M2P">
+        </div>
+        <div class="join-buttons">
+          <button class="btn" type="submit" data-page="controller.html">Controller</button>
+          <button class="btn" type="submit" data-page="viewer.html">Schermo relatore</button>
+          <button class="btn" type="submit" data-page="moderator.html">Moderatore</button>
+        </div>
+        <p class="error" id="joinError" role="alert"></p>
+      </form>
+    </section>
+
+    <section class="block" id="recentBlock" aria-labelledby="recentTitle" hidden>
+      <h2 id="recentTitle">Eventi recenti su questo dispositivo</h2>
+      <ul class="recent" id="recent"></ul>
+    </section>
+
+    <p class="lan" id="lan" hidden></p>
+  </main>
+  <script type="module" src="js/index.js"></script>
+</body>
+</html>
