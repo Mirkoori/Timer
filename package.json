@@ -1,0 +1,20 @@
+{
+  "name": "palco-timer",
+  "version": "0.1.0",
+  "description": "Timer da palco per eventi: scaletta, schermo relatore, messaggi, sincronizzazione in rete locale",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test \"test/*.test.js\""
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@fontsource/barlow": "^5.3.0",
+    "@fontsource/barlow-condensed": "^5.3.0",
+    "qrcode-generator": "^2.0.4",
+    "ws": "^8.22.1"
+  }
+}
