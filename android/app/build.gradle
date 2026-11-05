@@ -4,14 +4,14 @@ plugins {
 
 android {
     namespace 'it.mirkoori.palcotimer'
-    compileSdk 34
+    compileSdk 36
 
     defaultConfig {
         applicationId 'it.mirkoori.palcotimer'
         minSdk 26
-        targetSdk 34
-        versionCode 1
-        versionName '0.1.0'
+        targetSdk 36
+        versionCode 2
+        versionName '0.2.0'
     }
 
     // Chiave di prova, nel repository: serve solo a far installare gli aggiornamenti sopra la versione precedente
@@ -24,10 +24,23 @@ android {
             keyPassword 'android'
         }
     }
+    // Pacchetto per il Play Store: firmato con la chiave di caricamento, passata dal workflow tramite variabili d'ambiente.
+    // Se mancano (build locale o di prova) si usa la chiave di prova.
+    def uploadStore = System.getenv('UPLOAD_KEYSTORE')
+    if (uploadStore) {
+        signingConfigs {
+            upload {
+                storeFile file(uploadStore)
+                storePassword System.getenv('UPLOAD_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('UPLOAD_KEY_ALIAS')
+                keyPassword System.getenv('UPLOAD_KEY_PASSWORD')
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
-            signingConfig signingConfigs.debug
+            signingConfig uploadStore ? signingConfigs.upload : signingConfigs.debug
         }
     }
 
