@@ -12,6 +12,20 @@ export function canSend(role, type) {
   return role === 'controller' || (role === 'moderator' && MODERATOR_ACTIONS.has(type));
 }
 
+/** Limiti della versione gratuita dell'app Android (sul sito e sull'app per computer non ci sono limiti). */
+export const FREE_MAX_SEGMENTS = 5;
+
+/**
+ * Dice se un'azione richiede Pro: restituisce il motivo ('segments', 'moderator') oppure null se è consentita.
+ * Importazione ed esportazione sono bloccate dall'interfaccia, non sono azioni sullo stato.
+ */
+export function proRequired(state, action, role = 'controller') {
+  if (role === 'moderator') return 'moderator';
+  if (action && action.type === 'segment_add' && state.rundown.length >= FREE_MAX_SEGMENTS) return 'segments';
+  if (action && action.type === 'rundown_replace' && Array.isArray(action.segments) && action.segments.length > FREE_MAX_SEGMENTS) return 'segments';
+  return null;
+}
+
 export function newId() {
   return Math.random().toString(36).slice(2, 9);
 }

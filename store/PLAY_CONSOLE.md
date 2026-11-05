@@ -13,6 +13,25 @@ Elenco di cosa fare e cosa rispondere. Le risposte sono quelle corrette per l'ap
 3. Si scarica `palco-timer-playstore` (contiene `app-release.aab`).
 4. Conserva una copia della chiave di caricamento e della sua password in un posto sicuro. Con "Play App Signing" Google tiene la chiave vera dell'app e la chiave di caricamento si può sostituire, ma è meglio non perderla.
 
+## 1b. Prodotto in-app "Pro" (da creare prima del test)
+Play Console → Monetizza → Prodotti → **Prodotti in-app** → Crea prodotto:
+- ID prodotto: **`pro_unlock`** (deve essere identico, è scritto nell'app).
+- Nome: *Palco Timer Pro*. Descrizione: *Scaletta senza limiti, importazione da PDF/CSV/Excel, esportazione e pagina del moderatore. Acquisto unico.*
+- Prezzo: lo decidi tu (idea: tra 4,99 e 9,99 euro). Stato: **Attivo**.
+- Per provare l'acquisto senza pagare: Impostazioni → **Test delle licenze** → aggiungi il tuo account Google come tester, poi installa l'app da un test chiuso.
+- Nelle versioni di prova (APK) scaricate da GitHub l'acquisto non funziona: c'è un pulsante "Sblocca per prova" che serve solo a verificare le funzioni. Nei pacchetti per il Play Store quel pulsante non compare.
+
+**Cosa è gratis e cosa è Pro (App Android):**
+| | Gratis | Pro |
+|---|---|---|
+| Interventi in scaletta | fino a 5 | illimitati |
+| Schermo relatore e messaggi predefiniti | sì | sì |
+| Importa da PDF/CSV/Excel | no | sì |
+| Esporta CSV | no | sì |
+| Pagina del moderatore | no | sì |
+
+L'app per computer e il sito non hanno limiti.
+
 ## 2. Test chiuso (obbligatorio per gli account personali nuovi)
 - Servono almeno **12 tester** che restino iscritti **14 giorni consecutivi**, poi si chiede l'accesso alla produzione.
 - Test → Test chiuso → crea la release con il `.aab` → aggiungi i tester con un elenco di email o un gruppo Google.
@@ -26,6 +45,7 @@ Indirizzo dell'informativa privacy: https://mirkoori.github.io/Timer/public/priv
 **Contenuti dell'app**
 - Accesso all'app: nessun accesso richiesto, tutte le funzioni sono disponibili.
 - Annunci pubblicitari: **No**, l'app non contiene annunci.
+- Acquisti in-app: **Sì** (un prodotto, acquisto unico).
 - Pubblico di destinazione: **18 anni e oltre** (non rivolta ai minori).
 - App di notizie / governativa / finanziaria / salute: **No**.
 - Classificazione dei contenuti (questionario IARC): categoria Utility, tutte le risposte "No" (nessuna violenza, contenuti sessuali, giochi d'azzardo, acquisti, interazione tra utenti).
@@ -55,5 +75,6 @@ Indirizzo dell'informativa privacy: https://mirkoori.github.io/Timer/public/priv
 
 ## Decisioni ancora aperte
 - Nome definitivo.
-- Modello a pagamento: gratuita, acquisto unico, o versione Pro (richiede lavoro nell'app e la fatturazione di Google Play).
+- Prezzo dell'acquisto Pro.
+- Se i limiti gratuiti (5 interventi; niente importa/esporta/moderatore) sono quelli giusti: si cambiano in `FREE_MAX_SEGMENTS` e nei controlli di `controller.js`.
 - Versione per iPhone e App Store: non prevista per ora.

@@ -34,6 +34,7 @@ Il telefono o il tablet fa da controller principale e da host: l'app contiene un
 - Lo schermo resta acceso mentre il controller è aperto.
 - "Esporta" salva il CSV nella cartella Download.
 - Versione di prova: scarica `palco-timer.apk` da https://github.com/Mirkoori/Timer/releases/tag/android-test (si crea da **Actions → App Android → Run workflow**).
+- **Gratis e Pro (solo Android):** gratis fino a 5 interventi, senza importa/esporta e senza pagina del moderatore; l'acquisto unico "Pro" (Google Play Billing, prodotto `pro_unlock`) sblocca tutto. Il sito e l'app per computer non hanno limiti. Nella versione di prova (APK da GitHub) un pulsante "Sblocca per prova" simula l'acquisto.
 - L'APK è firmato con una chiave di prova inclusa nel repository: va bene per i test; per il Play Store servirà una chiave privata vera.
 
 ## Pagine e ruoli

@@ -43,6 +43,7 @@ public class MainActivity extends Activity {
     private WebView web;
     private ValueCallback<Uri[]> fileCallback;
     private volatile int port = -1;
+    private ProManager pro;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +68,9 @@ public class MainActivity extends Activity {
             }
             v.setPadding(l, t, r, b);
             return Build.VERSION.SDK_INT >= 30 ? WindowInsets.CONSUMED : insets.consumeSystemWindowInsets();
+        });
+        pro = new ProManager(this, () -> {
+            if (web != null) web.evaluateJavascript("window.dispatchEvent(new Event('palco-pro'))", null);
         });
         configureWebView();
 
@@ -169,6 +173,7 @@ public class MainActivity extends Activity {
         super.onResume();
         // se il sistema ha fermato il server mentre l'app era in secondo piano, lo si riavvia e si ricarica la pagina
         if (port > 0 && HostService.port() != port) startHost();
+        pro.refresh(); // ricontrolla l'acquisto con Google Play (anche dopo un rimborso)
     }
 
     @Override
@@ -186,6 +191,13 @@ public class MainActivity extends Activity {
 
     /** Funzioni dell'app usate dalle pagine (window.PalcoApp). */
     private final class Bridge {
+        @JavascriptInterface public boolean isPro() { return pro.isPro(); }
+        @JavascriptInterface public String price() { return pro.price(); }
+        @JavascriptInterface public boolean isDebug() { return pro.isDebuggable(); }
+        @JavascriptInterface public void debugSetPro(boolean value) { pro.debugSet(value); }
+        @JavascriptInterface public void restore() { runOnUiThread(() -> pro.refresh()); }
+        @JavascriptInterface public void buy() { runOnUiThread(() -> pro.buy(MainActivity.this)); }
+
         @JavascriptInterface
         public void saveText(String name, String text) {
             String safe = name == null ? "scaletta.csv" : name.replaceAll("[^A-Za-z0-9._-]", "_");

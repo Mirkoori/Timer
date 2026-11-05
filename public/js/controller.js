@@ -1,10 +1,11 @@
 import {
   computeDisplay, formatClock, formatDuration, parseDuration, plannedOffsets, totalSeconds, addToClock,
-  parseRundownText, parseProgramLines, rundownToCsv, newId,
+  parseRundownText, parseProgramLines, rundownToCsv, newId, FREE_MAX_SEGMENTS,
 } from './core.js';
 import { connect } from './sync.js';
 import { mountMessages } from './messages.js';
 import { pdfLines } from './pdf.js';
+import { inApp, isPro, price, buy, restore, isDebug, debugSetPro, onProChange } from './pro.js';
 import {
   $, el, icon, roomFromUrl, pageUrl, rememberRoom, showConn, renderDigits, makeRail, applyRail,
   stateLabel, toast, copyText, every100ms,
@@ -155,7 +156,54 @@ function editorItem(seg, i) {
   return li;
 }
 
+// ---- Pro (solo app Android) ----
+const dlgPro = $('#dlgPro');
+const PRO_REASONS = {
+  segments: `La versione gratuita arriva a ${FREE_MAX_SEGMENTS} interventi in scaletta.`,
+  import: 'L\'importazione del programma da PDF, CSV o Excel è una funzione Pro.',
+  export: 'L\'esportazione della scaletta è una funzione Pro.',
+  moderator: 'La pagina del moderatore è una funzione Pro.',
+  generic: 'Sblocca tutte le funzioni con un solo acquisto.',
+};
+function openPro(reason = 'generic') {
+  $('#proReason').textContent = PRO_REASONS[reason] || PRO_REASONS.generic;
+  $('#proMsg').textContent = '';
+  refreshPro();
+  if (!dlgPro.open) dlgPro.showModal();
+}
+/** Vero se l'azione è bloccata (e mostra la finestra Pro). */
+function locked(reason) {
+  if (isPro()) return false;
+  openPro(reason);
+  return true;
+}
+function refreshPro() {
+  const pro = isPro();
+  $('#btnPro').hidden = !inApp || pro;
+  $('#proBuy').textContent = price() ? `Sblocca Pro · ${price()}` : 'Sblocca Pro';
+  $('#proBuy').disabled = pro;
+  $('#proDebug').hidden = !(inApp && isDebug());
+  $('#moderatorCard').hidden = !pro;
+  $('#moderatorLock').hidden = pro;
+  $('#openModerator').hidden = !pro;
+}
+$('#btnPro').addEventListener('click', () => openPro('generic'));
+$('#moderatorUnlock').addEventListener('click', () => { dlgLinks.close(); openPro('moderator'); });
+$('#proBuy').addEventListener('click', () => { $('#proMsg').textContent = 'Si apre Google Play…'; buy(); });
+$('#proRestore').addEventListener('click', () => { $('#proMsg').textContent = 'Controllo gli acquisti…'; restore(); });
+$('#proDebug').addEventListener('click', () => { debugSetPro(!isPro()); refreshPro(); });
+onProChange(() => {
+  const was = dlgPro.open;
+  refreshPro();
+  if (isPro() && was) { dlgPro.close(); toast('Pro sbloccato. Grazie!'); }
+  else if (was) $('#proMsg').textContent = 'Nessun acquisto trovato su questo account Google.';
+  if (state) onStateChange();
+});
+$('#proLimit').textContent = `Scaletta senza limiti (nella versione gratuita fino a ${FREE_MAX_SEGMENTS} interventi)`;
+refreshPro();
+
 dom.btnAdd.addEventListener('click', () => {
+  if (!isPro() && state && state.rundown.length >= FREE_MAX_SEGMENTS) { openPro('segments'); return; }
   const id = newId();
   editing = { id, draft: { title: 'Nuovo intervento', speaker: '', duration: '5:00', notes: '' }, error: '', focus: true };
   send({ type: 'segment_add', segment: { id, title: 'Nuovo intervento', duration: 300 } });
@@ -306,7 +354,7 @@ function parseImport() {
   importGo.disabled = n === 0;
   importGo.textContent = n ? `Sostituisci la scaletta con ${n} ${n === 1 ? 'intervento' : 'interventi'}` : 'Sostituisci la scaletta';
 }
-dom.btnImport.addEventListener('click', () => { importText.value = ''; importStart = ''; parseImport(); dlgImport.showModal(); importText.focus(); });
+dom.btnImport.addEventListener('click', () => { if (locked('import')) return; importText.value = ''; importStart = ''; parseImport(); dlgImport.showModal(); importText.focus(); });
 importText.addEventListener('input', parseImport);
 $('#importFile').addEventListener('change', async (e) => {
   const file = e.target.files[0];
@@ -341,6 +389,7 @@ importGo.addEventListener('click', () => {
   toast(`Scaletta importata: ${parsed.segments.length} ${parsed.segments.length === 1 ? 'intervento' : 'interventi'}`);
 });
 dom.btnExport.addEventListener('click', () => {
+  if (locked('export')) return;
   const blob = new Blob(['﻿', rundownToCsv(state.rundown)], { type: 'text/csv;charset=utf-8' });
   const slug = state.name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'evento';
   // Nell'app Android i download da blob non funzionano: il salvataggio lo fa l'app (cartella Download).

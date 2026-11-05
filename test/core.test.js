@@ -231,3 +231,19 @@ test('programma: titolo "I N F O R M A Z I O N I" e contorno dopo la chiusura no
   const r = parseProgramLines(['10:00 Apertura', 'Anna', '10:30 Chiusura dei lavori', 'Sala Rossa', '', 'I N F O R M A Z I O N I', 'Tel. 051 263703']);
   assert.deepEqual(r.segments.map((s) => [s.title, s.duration]), [['Apertura', 1800]]);
 });
+
+test('versione gratuita: limite di 3 interventi, moderatore bloccato, il resto libero', async () => {
+  const { proRequired, FREE_MAX_SEGMENTS, defaultState: ds } = await import('../public/js/core.js');
+  assert.equal(FREE_MAX_SEGMENTS, 5);
+  const st = ds(); // 4 interventi di esempio: un nuovo evento gratuito deve poterne aggiungere ancora uno
+  assert.ok(st.rundown.length < FREE_MAX_SEGMENTS);
+  assert.equal(proRequired(st, { type: 'segment_add' }), null);
+  const full = { ...st, rundown: Array.from({ length: FREE_MAX_SEGMENTS }, (_, i) => ({ ...st.rundown[0], id: 'x' + i })) };
+  assert.equal(proRequired(full, { type: 'segment_add' }), 'segments');
+  assert.equal(proRequired(st, { type: 'rundown_replace', segments: new Array(FREE_MAX_SEGMENTS + 1).fill(1) }), 'segments');
+  assert.equal(proRequired(st, { type: 'rundown_replace', segments: new Array(FREE_MAX_SEGMENTS).fill(1) }), null);
+  assert.equal(proRequired(st, { type: 'message_show' }, 'moderator'), 'moderator');
+  for (const type of ['start', 'pause', 'next', 'adjust', 'message_show', 'segment_update', 'segment_remove']) {
+    assert.equal(proRequired(st, { type }), null, type);
+  }
+});

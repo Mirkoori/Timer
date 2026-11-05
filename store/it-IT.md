@@ -44,6 +44,10 @@ PENSATO PER LAVORARE
 
 Un solo dispositivo basta: puoi aprire anche lo schermo relatore sullo stesso telefono o tablet.
 
+GRATIS E PRO
+L'app è gratuita, senza pubblicità e senza scadenza: scaletta fino a 5 interventi, schermo relatore e messaggi predefiniti.
+Con un unico acquisto (nessun abbonamento) sblocchi Pro: scaletta senza limiti, importazione del programma da PDF, CSV o Excel, esportazione e pagina del moderatore.
+
 ## Novità di questa versione
 Prima versione.
 

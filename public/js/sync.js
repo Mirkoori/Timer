@@ -7,7 +7,8 @@
 //
 // In entrambi i casi la pagina riceve lo stato completo e calcola da sola il tempo mostrato
 // (scadenza assoluta meno ora corrente): se la connessione cade il timer continua a scorrere giusto.
-import { reduce, tick, defaultState, canSend } from './core.js';
+import { reduce, tick, defaultState, canSend, proRequired } from './core.js';
+import { inApp, isPro } from './pro.js';
 
 /** @returns {Promise<{mode:'server'|'local', state:object|null, now:()=>number, send:(a:object)=>void, close:()=>void}>} */
 export async function connect({ room, role, onState, onStatus }) {
@@ -104,6 +105,7 @@ function connectHost({ room, onState, onStatus }) {
   };
   const apply = (action, role = 'controller') => {
     if (!action || !canSend(role, action.type)) return;
+    if (inApp && !isPro() && proRequired(state, action, role)) return; // versione gratuita: i limiti valgono per tutti i dispositivi
     const next = reduce(state, action, Date.now());
     if (next !== state) commit(next);
   };

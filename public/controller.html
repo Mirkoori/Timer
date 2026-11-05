@@ -21,6 +21,7 @@
     <button class="btn btn-small code" id="code" type="button"></button>
     <span class="conn" id="conn" data-status="connecting">Connessione in corso</span>
     <span class="spacer"></span>
+    <button class="btn btn-small btn-pro" id="btnPro" type="button" hidden>Sblocca Pro</button>
     <button class="btn btn-small" id="btnLinks" type="button"></button>
     <button class="btn btn-small btn-quiet" id="btnSettings" type="button"></button>
   </header>
@@ -90,7 +91,11 @@
         </div>
         <div class="qr" id="qrViewer" role="img" aria-label="Codice QR dello schermo relatore"></div>
       </div>
-      <div class="link-card">
+      <div class="pro-lock" id="moderatorLock" hidden>
+        <p><strong>Moderatore</strong>: la pagina per mandare messaggi senza toccare il timer è una funzione Pro.</p>
+        <button class="btn btn-small" id="moderatorUnlock" type="button">Scopri Pro</button>
+      </div>
+      <div class="link-card" id="moderatorCard">
         <div class="link-text">
           <h3>Moderatore</h3>
           <p>Per chi manda messaggi ai relatori senza toccare il timer.</p>
@@ -99,6 +104,24 @@
         <div class="qr" id="qrModerator" role="img" aria-label="Codice QR della pagina moderatore"></div>
       </div>
     </div>
+  </dialog>
+
+  <!-- Pro -->
+  <dialog id="dlgPro" aria-labelledby="dlgProTitle">
+    <div class="dlg-head"><h2 id="dlgProTitle">Palco Timer Pro</h2><button class="btn btn-icon btn-quiet" data-close type="button" aria-label="Chiudi"></button></div>
+    <div class="dlg-body">
+      <p class="note" id="proReason"></p>
+      <ul class="pro-list">
+        <li id="proLimit">Scaletta senza limiti</li>
+        <li>Importa il programma da PDF, CSV o Excel</li>
+        <li>Esporta la scaletta</li>
+        <li>Pagina del moderatore per i messaggi al palco</li>
+      </ul>
+      <p class="note">Un solo acquisto, nessun abbonamento. Vale per questo account Google su tutti i tuoi dispositivi Android.</p>
+      <p class="note" id="proMsg" aria-live="polite"></p>
+      <button class="btn btn-small btn-quiet" id="proDebug" type="button" hidden>Sblocca per prova (solo versione di prova)</button>
+    </div>
+    <div class="dlg-foot"><button class="btn btn-quiet" id="proRestore" type="button">Ripristina acquisto</button><button class="btn btn-go" id="proBuy" type="button">Sblocca Pro</button></div>
   </dialog>
 
   <!-- impostazioni -->

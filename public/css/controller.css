@@ -121,3 +121,11 @@
 #dlgLinks[data-mode='local'] .link-card { display: none; }
 .btn-big-link { background: var(--go); color: #06210f; min-height: 56px; padding: 0 22px; font-size: 18px; font-weight: 600; }
 .btn-big-link:hover { background: #55e698; color: #06210f; }
+
+/* Pro */
+.btn-pro { background: var(--warn); color: #2a1d00; font-weight: 600; }
+.btn-pro:hover { background: #ffc733; color: #2a1d00; }
+.pro-list { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
+.pro-lock { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 14px; border-radius: var(--r-m); background: var(--raised); }
+.pro-lock p { margin: 0; max-width: 46ch; }
+.strip-add-lock { color: var(--warn); }
