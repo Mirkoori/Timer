@@ -249,13 +249,19 @@ dom.btnLinks.addEventListener('click', async () => {
   const { base, ips } = await baseUrl();
   const viewer = pageUrl('viewer.html', room, base);
   const moderator = pageUrl('moderator.html', room, base);
+  const local = link.mode !== 'server';
+  dlgLinks.dataset.mode = local ? 'local' : 'server';
+  $('#openViewer').href = viewer;
+  $('#openModerator').href = moderator;
   $('#urlViewer').value = viewer;
   $('#urlModerator').value = moderator;
-  $('#qrViewer').innerHTML = qr(viewer);
-  $('#qrModerator').innerHTML = qr(moderator);
-  $('#linksNote').textContent = link.mode === 'server'
+  if (!local) {
+    $('#qrViewer').innerHTML = qr(viewer);
+    $('#qrModerator').innerHTML = qr(moderator);
+  }
+  $('#linksNote').textContent = !local
     ? `Gli schermi devono essere sulla stessa rete Wi-Fi o hotspot di questo dispositivo, non serve internet.${ips.length > 1 ? ` Se un indirizzo non si apre, prova con un altro di questo dispositivo: ${ips.join(', ')}.` : ''}`
-    : 'Modalità locale: l\'app non è stata aperta da un server, quindi gli schermi funzionano solo in altre schede o finestre di questo browser. Per usare più dispositivi avvia il server con npm start.';
+    : 'Senza server gli schermi si aprono in un\'altra finestra o scheda di questo stesso browser: il codice e il QR non funzionerebbero da un altro dispositivo. Per collegare più dispositivi avvia il server con npm start.';
   dlgLinks.showModal();
 });
 $('#copyViewer').addEventListener('click', () => copyText($('#urlViewer').value, 'Indirizzo copiato'));
