@@ -116,9 +116,8 @@
 .qr svg { display: block; width: 100%; height: 100%; }
 @media (max-width: 520px) { .link-card { grid-template-columns: 1fr; } .qr { justify-self: center; } .two { grid-template-columns: 1fr; } .strip-edit .two { grid-template-columns: 1fr 120px; } }
 
-/* senza server: niente QR, solo l'apertura in un'altra finestra dello stesso browser */
-.local-open { display: none; gap: 10px; flex-wrap: wrap; }
-#dlgLinks[data-mode='local'] .local-open { display: flex; }
+/* pulsanti per aprire gli schermi su questo stesso dispositivo; senza server niente QR */
+.local-open { display: flex; gap: 10px; flex-wrap: wrap; }
 #dlgLinks[data-mode='local'] .link-card { display: none; }
 .btn-big-link { background: var(--go); color: #06210f; min-height: 56px; padding: 0 22px; font-size: 18px; font-weight: 600; }
 .btn-big-link:hover { background: #55e698; color: #06210f; }

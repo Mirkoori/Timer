@@ -260,7 +260,7 @@ dom.btnLinks.addEventListener('click', async () => {
     $('#qrModerator').innerHTML = qr(moderator);
   }
   $('#linksNote').textContent = !local
-    ? `Gli schermi devono essere sulla stessa rete Wi-Fi o hotspot di questo dispositivo, non serve internet.${ips.length > 1 ? ` Se un indirizzo non si apre, prova con un altro di questo dispositivo: ${ips.join(', ')}.` : ''}`
+    ? `Per usare altri dispositivi: devono essere sulla stessa rete Wi-Fi o hotspot di questo, non serve internet. Per usarli su questo stesso dispositivo, usa i pulsanti.${ips.length > 1 ? ` Se un indirizzo non si apre, prova con un altro di questo dispositivo: ${ips.join(', ')}.` : ''}`
     : 'Senza server gli schermi si aprono in un\'altra finestra o scheda di questo stesso browser: il codice e il QR non funzionerebbero da un altro dispositivo. Per collegare più dispositivi avvia il server con npm start.';
   dlgLinks.showModal();
 });

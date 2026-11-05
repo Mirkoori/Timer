@@ -15,6 +15,17 @@ Il server stampa due indirizzi: quello locale e quello di rete (es. `http://192.
 
 Porta diversa: `PORT=3100 npm start`.
 
+## App per computer (Windows, Mac, Linux)
+
+È la stessa app con il server incorporato: si installa, si apre, e fa da controller principale.
+- Gli schermi (relatore, moderatore) si aprono su altri dispositivi con il QR, sulla stessa rete Wi-Fi o hotspot, oppure su questo stesso computer con i pulsanti "Apri lo schermo relatore" (finestra a parte, da trascinare sul proiettore).
+- Lo schermo del computer non va in standby mentre l'app è aperta.
+- Gli eventi si salvano nella cartella dati dell'app.
+- Al primo avvio Windows chiede di consentire l'accesso alla rete: va consentito, altrimenti gli altri dispositivi non si collegano.
+
+Provarla dal codice: `npm install && npm run desktop`.
+Creare gli installer: su GitHub, scheda **Actions → App per computer → Run workflow** (oppure creando un tag `v0.2.0`, che li allega anche alla Release). Scarichi i file `.exe`, `.dmg` e `.AppImage` da quella pagina.
+
 ## Pagine e ruoli
 
 | Pagina | Ruolo | Cosa può fare |
@@ -64,7 +75,7 @@ npm test
 
 ## Prossimi passi
 
-1. Pacchetto Android: server incorporato nell'app, che fa da host; gli altri dispositivi si collegano da browser.
+1. Pacchetto Android: server incorporato nell'app, che fa da host; gli altri dispositivi si collegano da browser. (Quello per computer c'è già.)
 2. Schermo sempre acceso in modo nativo.
 3. PIN o token per i ruoli.
 4. Indicatore di anticipo/ritardo.
