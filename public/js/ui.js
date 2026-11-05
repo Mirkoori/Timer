@@ -92,6 +92,7 @@ const STATUS_TEXT = {
   offline: 'Connessione persa',
   connecting: 'Connessione in corso',
   waiting: 'In attesa del controller',
+  replaced: 'Un altro controller ha preso il comando',
 };
 export function showConn(node, status) {
   node.dataset.status = status;

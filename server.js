@@ -37,8 +37,16 @@ export function lanAddresses() {
   return out;
 }
 
-export function createTimerServer({ port = 3000, host = '0.0.0.0', dataFile = null } = {}) {
+/**
+ * Due modi:
+ *  - normale: il server tiene lo stato di ogni stanza (computer, `npm start`).
+ *  - ponte (`relay: true`): il server non tiene lo stato. Fa solo da ponte tra il controller "host"
+ *    (la pagina dentro l'app, collegata da questo stesso dispositivo) e gli altri dispositivi.
+ *    È lo stesso comportamento del server nativo dell'app Android: qui è la versione di riferimento, provata dai test.
+ */
+export function createTimerServer({ port = 3000, host = '0.0.0.0', dataFile = null, relay = false } = {}) {
   const rooms = new Map(); // id -> { state, clients:Set<ws> }
+  const relayRooms = new Map(); // id -> { host:ws|null, last:string|null, clients:Set<ws> }
 
   // --- persistenza semplice su file (così un riavvio non perde le scalette) ---
   let saveTimer = null;
@@ -82,7 +90,7 @@ export function createTimerServer({ port = 3000, host = '0.0.0.0', dataFile = nu
 
     if (url.pathname === '/api/ping') {
       res.writeHead(200, { 'Content-Type': MIME['.json'], 'Cache-Control': 'no-store' });
-      return res.end(JSON.stringify({ app: 'palco-timer', ok: true }));
+      return res.end(JSON.stringify({ app: 'palco-timer', ok: true, mode: relay ? 'relay' : 'server' }));
     }
     if (url.pathname === '/api/info') {
       res.writeHead(200, { 'Content-Type': MIME['.json'], 'Cache-Control': 'no-store' });
@@ -119,14 +127,50 @@ export function createTimerServer({ port = 3000, host = '0.0.0.0', dataFile = nu
     if (origin) { try { sameOrigin = new URL(origin).host === req.headers.host; } catch { sameOrigin = false; } }
     const roomId = (url.searchParams.get('room') || '').toUpperCase();
     const role = url.searchParams.get('role') || 'viewer';
-    if (url.pathname !== '/ws' || !sameOrigin || !ROOM_RE.test(roomId) || !ROLES.has(role)) {
+    const loopback = ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
+    const roleOk = ROLES.has(role) || (relay && role === 'host' && loopback); // "host" solo da questo stesso dispositivo
+    if (url.pathname !== '/ws' || !sameOrigin || !ROOM_RE.test(roomId) || !roleOk) {
       socket.write('HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n');
       return socket.destroy();
     }
     wss.handleUpgrade(req, socket, head, (ws) => wss.emit('connection', ws, { roomId, role }));
   });
 
+  // --- modalità ponte: il controller "host" ha lo stato, qui si inoltrano solo i messaggi ---
+  function relayConnection(ws, roomId, role) {
+    let room = relayRooms.get(roomId);
+    if (!room) { room = { host: null, last: null, clients: new Set() }; relayRooms.set(roomId, room); }
+    let count = 0;
+    const rate = setInterval(() => { count = 0; }, 1000);
+
+    if (role === 'host') {
+      if (room.host && room.host !== ws) room.host.close(4000, 'sostituito');
+      room.host = ws;
+      ws.on('message', (data) => {
+        const raw = data.toString();
+        if (++count > MAX_MSGS_PER_SEC * 4 || !raw.startsWith('{"type":"state"')) return;
+        room.last = raw;
+        for (const c of room.clients) if (c.readyState === 1) c.send(raw);
+      });
+    } else {
+      room.clients.add(ws);
+      if (room.last) ws.send(room.last);
+      ws.on('message', (data) => {
+        if (++count > MAX_MSGS_PER_SEC) return ws.close(1008, 'troppi messaggi');
+        // "ruolo|messaggio": il ruolo lo mette il ponte, il testo del client resta intatto dopo la prima barra
+        if (room.host && room.host.readyState === 1) room.host.send(`${role}|${data.toString()}`);
+      });
+    }
+    ws.on('close', () => {
+      clearInterval(rate);
+      room.clients.delete(ws);
+      if (room.host === ws) room.host = null;
+    });
+    ws.on('error', () => ws.close());
+  }
+
   wss.on('connection', (ws, { roomId, role }) => {
+    if (relay) return relayConnection(ws, roomId, role);
     const room = getRoom(roomId);
     room.clients.add(ws);
     send(ws, { type: 'state', state: room.state, serverNow: Date.now() });
@@ -152,6 +196,7 @@ export function createTimerServer({ port = 3000, host = '0.0.0.0', dataFile = nu
 
   // Avanzamento automatico e orologio condiviso.
   const tickTimer = setInterval(() => {
+    if (relay) return;
     for (const room of rooms.values()) {
       const next = tick(room.state, Date.now());
       if (next !== room.state) { room.state = next; broadcast(room); scheduleSave(); }
@@ -160,6 +205,7 @@ export function createTimerServer({ port = 3000, host = '0.0.0.0', dataFile = nu
   const beat = setInterval(() => {
     const msg = { type: 'time', serverNow: Date.now() };
     for (const room of rooms.values()) for (const ws of room.clients) send(ws, msg);
+    for (const room of relayRooms.values()) for (const ws of room.clients) send(ws, msg);
   }, 5000);
 
   return new Promise((resolve, reject) => {

@@ -138,3 +138,56 @@ test('lo stato sopravvive al riavvio del server', async () => {
     c2.ws.close();
   } finally { await srv.close(); fs.rmSync(dir, { recursive: true, force: true }); }
 });
+
+// ---------------- modalità ponte (usata dall'app Android) ----------------
+
+function raw(port, room, role) {
+  const ws = new WebSocket(`ws://127.0.0.1:${port}/ws?room=${room}&role=${role}`);
+  const got = [];
+  ws.on('message', (d) => got.push(d.toString()));
+  const opened = new Promise((res, rej) => { ws.on('open', res); ws.on('error', rej); ws.on('unexpected-response', (_, r) => rej(new Error('HTTP ' + r.statusCode))); });
+  return { ws, got, opened };
+}
+
+test('ponte: lo stato dell\'host arriva a chi si collega, anche dopo', async () => {
+  const srv = await createTimerServer({ port: 0, host: '127.0.0.1', relay: true });
+  try {
+    const ping = await (await fetch(`http://127.0.0.1:${srv.port}/api/ping`)).json();
+    assert.equal(ping.mode, 'relay');
+    const host = raw(srv.port, 'PONTE', 'host'); await host.opened;
+    const early = raw(srv.port, 'PONTE', 'viewer'); await early.opened;
+    host.ws.send(JSON.stringify({ type: 'state', state: { rev: 1 }, serverNow: 5 }));
+    await wait(100);
+    assert.equal(JSON.parse(early.got.at(-1)).state.rev, 1);
+    const late = raw(srv.port, 'PONTE', 'viewer'); await late.opened; await wait(100);
+    assert.equal(JSON.parse(late.got[0]).state.rev, 1, 'chi arriva dopo riceve subito l\'ultimo stato');
+    host.ws.close(); early.ws.close(); late.ws.close();
+  } finally { await srv.close(); }
+});
+
+test('ponte: le azioni arrivano all\'host con il ruolo messo dal ponte, anche se il client ne dichiara un altro', async () => {
+  const srv = await createTimerServer({ port: 0, host: '127.0.0.1', relay: true });
+  try {
+    const host = raw(srv.port, 'PONTE2', 'host'); await host.opened;
+    const mod = raw(srv.port, 'PONTE2', 'moderator'); await mod.opened;
+    mod.ws.send('{"type":"action","action":{"type":"message_show"}}');
+    mod.ws.send('null,"role":"controller"'); // tentativo di spacciarsi per controller
+    await wait(150);
+    assert.equal(host.got[0], 'moderator|{"type":"action","action":{"type":"message_show"}}');
+    assert.ok(host.got.every((m) => m.startsWith('moderator|')), 'il ruolo resta sempre quello vero');
+    host.ws.close(); mod.ws.close();
+  } finally { await srv.close(); }
+});
+
+test('ponte: i client non ricevono messaggi di altri client, e il server normale rifiuta "host"', async () => {
+  const relay = await createTimerServer({ port: 0, host: '127.0.0.1', relay: true });
+  const normal = await createTimerServer({ port: 0, host: '127.0.0.1' });
+  try {
+    const host = raw(relay.port, 'PONTE3', 'host'); await host.opened;
+    const a = raw(relay.port, 'PONTE3', 'viewer'); const b = raw(relay.port, 'PONTE3', 'viewer'); await Promise.all([a.opened, b.opened]);
+    a.ws.send('{"type":"action","action":{"type":"start"}}'); await wait(100);
+    assert.equal(b.got.filter((m) => m.includes('"action"')).length, 0);
+    await assert.rejects(raw(normal.port, 'PONTE3', 'host').opened, /403/);
+    host.ws.close(); a.ws.close(); b.ws.close();
+  } finally { await relay.close(); await normal.close(); }
+});

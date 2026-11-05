@@ -91,7 +91,7 @@ textarea.input { resize: vertical; min-height: 88px; line-height: 1.35; }
 .conn { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 15px; white-space: nowrap; }
 .conn::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
 .conn[data-status='online']::before { background: var(--go); }
-.conn[data-status='offline']::before { background: var(--crit); }
+.conn[data-status='offline']::before, .conn[data-status='replaced']::before { background: var(--crit); }
 .conn[data-status='waiting']::before, .conn[data-status='connecting']::before { background: var(--warn); }
 
 /* ---- cifre del timer: ogni carattere ha larghezza fissa, così non ballano ---- */

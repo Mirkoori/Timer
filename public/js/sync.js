@@ -11,21 +11,30 @@ import { reduce, tick, defaultState, canSend } from './core.js';
 
 /** @returns {Promise<{mode:'server'|'local', state:object|null, now:()=>number, send:(a:object)=>void, close:()=>void}>} */
 export async function connect({ room, role, onState, onStatus }) {
-  return (await probeServer())
-    ? connectServer({ room, role, onState, onStatus })
-    : await connectLocal({ room, role, onState, onStatus });
+  const mode = await probeServer();
+  if (!mode) return connectLocal({ room, role, onState, onStatus });
+  // Nell'app il server è un "ponte": lo stato lo tiene il controller aperto su questo stesso dispositivo.
+  if (mode === 'relay' && role === 'controller' && isLoopback()) return connectHost({ room, onState, onStatus });
+  return connectServer({ room, role, onState, onStatus });
 }
 
+function isLoopback() {
+  return ['localhost', '127.0.0.1', '[::1]', '::1'].includes(location.hostname);
+}
+
+/** @returns {Promise<'server'|'relay'|null>} */
 async function probeServer() {
-  if (!/^https?:$/.test(location.protocol)) return false;
+  if (!/^https?:$/.test(location.protocol)) return null;
   try {
     const ctl = new AbortController();
     const t = setTimeout(() => ctl.abort(), 1200);
     const r = await fetch('/api/ping', { signal: ctl.signal, cache: 'no-store' });
     clearTimeout(t);
-    return r.ok && (await r.json()).app === 'palco-timer';
+    if (!r.ok) return null;
+    const info = await r.json();
+    return info.app === 'palco-timer' ? (info.mode === 'relay' ? 'relay' : 'server') : null;
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -65,6 +74,65 @@ function connectServer({ room, role, onState, onStatus }) {
     ws.onerror = () => ws.close();
   }
   open();
+  return link;
+}
+
+// ---------------- modalità host (app Android) ----------------
+
+/**
+ * Il controller dell'app tiene lo stato e fa partire il timer (come la scheda controller in modalità locale),
+ * e lo passa al server-ponte, che lo inoltra agli altri dispositivi. Le azioni degli altri arrivano come "ruolo|messaggio".
+ */
+function connectHost({ room, onState, onStatus }) {
+  const key = `palco:state:${room}`;
+  let state;
+  try { state = JSON.parse(localStorage.getItem(key)); } catch { state = null; }
+  if (!state || !Array.isArray(state.rundown)) state = defaultState();
+
+  let ws = null;
+  let retry = 0;
+  let closed = false;
+  const link = { mode: 'host', state, now: () => Date.now(), send: (a) => apply(a), close() { closed = true; clearInterval(timer); if (ws) ws.close(); } };
+
+  const push = () => { if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'state', state, serverNow: Date.now() })); };
+  const commit = (next) => {
+    state = next;
+    link.state = next;
+    try { localStorage.setItem(key, JSON.stringify(next)); } catch { /* spazio finito: si continua */ }
+    push();
+    onState(next);
+  };
+  const apply = (action, role = 'controller') => {
+    if (!action || !canSend(role, action.type)) return;
+    const next = reduce(state, action, Date.now());
+    if (next !== state) commit(next);
+  };
+  const timer = setInterval(() => {
+    const next = tick(state, Date.now());
+    if (next !== state) commit(next);
+  }, 250);
+
+  function open() {
+    ws = new WebSocket(`${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws?room=${encodeURIComponent(room)}&role=host`);
+    ws.onopen = () => { retry = 0; push(); };
+    ws.onmessage = (ev) => {
+      const text = String(ev.data);
+      const bar = text.indexOf('|');
+      if (bar < 1) return;
+      let m;
+      try { m = JSON.parse(text.slice(bar + 1)); } catch { return; }
+      if (m && m.type === 'action') apply(m.action, text.slice(0, bar));
+    };
+    ws.onclose = (ev) => {
+      if (ev.code === 4000) { // un altro controller su questo dispositivo ha preso il comando: ci si ferma, niente tira e molla
+        closed = true; clearInterval(timer); onStatus('replaced'); return;
+      }
+      if (!closed) setTimeout(open, Math.min(4000, 400 * ++retry));
+    };
+    ws.onerror = () => ws.close();
+  }
+  open();
+  setTimeout(() => { onStatus('online'); onState(state); }, 0);
   return link;
 }
 

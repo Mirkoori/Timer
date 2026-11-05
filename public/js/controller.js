@@ -230,7 +230,7 @@ document.querySelectorAll('dialog').forEach((dlg) => {
 // collegamento schermi
 const dlgLinks = $('#dlgLinks');
 async function baseUrl() {
-  if (link.mode !== 'server') return { base: location.href, ips: [] };
+  if (link.mode === 'local') return { base: location.href, ips: [] };
   const local = ['localhost', '127.0.0.1', '[::1]', '::1'].includes(location.hostname);
   if (!local) return { base: location.href, ips: [] };
   try {
@@ -249,7 +249,7 @@ dom.btnLinks.addEventListener('click', async () => {
   const { base, ips } = await baseUrl();
   const viewer = pageUrl('viewer.html', room, base);
   const moderator = pageUrl('moderator.html', room, base);
-  const local = link.mode !== 'server';
+  const local = link.mode === 'local';
   dlgLinks.dataset.mode = local ? 'local' : 'server';
   $('#openViewer').href = viewer;
   $('#openModerator').href = moderator;
